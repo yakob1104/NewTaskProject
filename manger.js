@@ -9,10 +9,10 @@ class Manager {
     }
 
     loadTasks() {
-        const saved = sessionStorage.getItem(STORAGE_KEY)
-        if (!saved) return []
-
         try {
+            const saved = sessionStorage.getItem(STORAGE_KEY)
+            if (!saved) return []
+
             const parsed = JSON.parse(saved)
             return parsed.map((item) => {
                 const task = new Task(item.description)
@@ -26,7 +26,11 @@ class Manager {
     }
 
     saveTasks() {
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(this.tasks))
+        try {
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(this.tasks))
+        } catch {
+            // מתעלם אם הדפדפן חוסם גישה ל-sessionStorage
+        }
     }
 
     addTask(task) {
@@ -52,43 +56,61 @@ class Manager {
     }
 
     updateTable() {
-        let table = document.getElementById("table")
-        table.innerHTML = `<tr>
-            <th>description</th>
-            <th>Complete/Incomplete</th>
-            <th>Complete</th>
-            <th>Delete</th>
-        </tr>`
-        for (let task of this.tasks) {
-            table.innerHTML += `
-            <tr>
-                <td>${task.description}</td>
-                <td>${task.active ? "Incomplete" : "Complete"}</td>
-                <td><button class="btn btn-success" onclick="window.completeTask(${task.id})"><i class="fa-solid fa-check"></i></button></td>
-                <td><button class="btn btn-danger" onclick="window.removeTask(${task.id})"><i class="fa-solid fa-delete-left"></i></button></td>
-            </tr>
-            `
+        const tbody = document.getElementById("table-body")
+        tbody.innerHTML = ""
+
+        for (const task of this.tasks) {
+            const row = document.createElement("tr")
+
+            const descCell = document.createElement("td")
+            descCell.textContent = task.description
+
+            const statusCell = document.createElement("td")
+            statusCell.textContent = task.active ? "Incomplete" : "Complete"
+
+            const completeCell = document.createElement("td")
+            const completeBtn = document.createElement("button")
+            completeBtn.type = "button"
+            completeBtn.className = "btn btn-success"
+            completeBtn.innerHTML = '<i class="fa-solid fa-check"></i>'
+            completeBtn.addEventListener("click", () => this.completeTask(task.id))
+            completeCell.appendChild(completeBtn)
+
+            const deleteCell = document.createElement("td")
+            const deleteBtn = document.createElement("button")
+            deleteBtn.type = "button"
+            deleteBtn.className = "btn btn-danger"
+            deleteBtn.innerHTML = '<i class="fa-solid fa-delete-left"></i>'
+            deleteBtn.addEventListener("click", () => {
+                if (confirm("Are you sure?")) {
+                    this.removeTask(task.id)
+                    alert("Task has been removed!")
+                }
+            })
+            deleteCell.appendChild(deleteBtn)
+
+            row.append(descCell, statusCell, completeCell, deleteCell)
+            tbody.appendChild(row)
         }
     }
 }
 
-let manager = new Manager()
+const manager = new Manager()
 
-window.completeTask = (id) => {
-    manager.completeTask(id)
-}
-
-window.removeTask = (id) => {
-    if (confirm("Are you sure?")) {
-        manager.removeTask(id)
-        alert("Task has been removed!")
-    }
-}
-
-window.addTask = () => {
-    let taskName = document.getElementById("tasku").value
-    document.getElementById("tasku").value = ""
+function handleAddTask() {
+    const input = document.getElementById("tasku")
+    const taskName = input.value.trim()
+    input.value = ""
     if (!taskName) return
-    let newTask = new Task(taskName)
+
+    const newTask = new Task(taskName)
     manager.addTask(newTask)
+    input.focus()
 }
+
+document.getElementById("add-btn").addEventListener("click", handleAddTask)
+document.getElementById("tasku").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+        handleAddTask()
+    }
+})
