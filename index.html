@@ -79,16 +79,19 @@
 
         <div class="task-form">
             <input type="text" id="tasku" placeholder="Enter a new task...">
-            <button class="btn btn-success" onclick="window.addTask()">add</button>
+            <button type="button" id="add-btn" class="btn btn-success">add</button>
         </div>
 
         <table id="table">
-            <tr>
-                <th>description</th>
-                <th>Complete/Incomplete</th>
-                <th>Complete</th>
-                <th>Delete</th>
-            </tr>
+            <thead>
+                <tr>
+                    <th>description</th>
+                    <th>Complete/Incomplete</th>
+                    <th>Complete</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
         </table>
     </div>
 
